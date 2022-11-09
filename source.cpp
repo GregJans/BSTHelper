@@ -58,12 +58,14 @@ public:
 treeNameNode* insertTreeNameNode(treeNameNode* root, char name[MAX]);
 itemNode* insertItemNode(itemNode* root, char name[MAX], int pop);
 template<typename T>
-char* inorder(T* root, static char[]);
+void inorder(T* root, static char[]);
+
 treeNameNode* searchNameNode(treeNameNode* root, char treeName[MAX]);
 void traverse_in_traverse(treeNameNode* root);
-treeNameNode* buildNameTree();
+treeNameNode* buildNameTree(FILE* infile, int treeNameCount, int itemCount);
+void handleQueries(FILE* infile, treeNameNode* root, int queryCount);
+
 bool search(treeNameNode* tree, itemNode* root, char name[]);
-int countNodeNum(itemNode* root);
 int itemBefore(itemNode *root, char name[]);
 void heightBal(treeNameNode *root);
 int count(itemNode *root);
@@ -105,16 +107,8 @@ itemNode* insertItemNode(itemNode* root, char name[MAX], int pop) {
 }
 
 
-treeNameNode* buildNameTree() {
+treeNameNode* buildNameTree(FILE* infile, int treeNameCount, int itemCount) {
 	
-	
-	FILE* infile = fopen("in.txt", "r");
-	if (infile == NULL)
-		std::cout << "Error opening file" << std::endl;
-
-	int treeNameCount, itemCount, queryCount;
-	fscanf(infile, "%d %d %d", &treeNameCount, &itemCount, &queryCount);
-
 	// set the first entry as root node
 	char line[MAX];
 	fscanf(infile, "%s", &line);
@@ -133,20 +127,18 @@ treeNameNode* buildNameTree() {
 		treeNameNode* referencedNode = searchNameNode(tempRoot, treeName);
 		referencedNode->theTree = insertItemNode(referencedNode->theTree, itemName, population);
 	}
-	fclose(infile);
 	return tempRoot;
 }
 
 
 template<typename T>
-char* inorder(T* root, static char result[]) {
+void inorder(T* root, static char result[]) {
 	if (root != NULL) {
 		inorder(root->left, result);
 		strcat(result, root->name);
 		strcat(result, " ");
 		inorder(root->right, result);
 	}
-	return result;
 }
 
 
@@ -166,13 +158,33 @@ treeNameNode* searchNameNode(treeNameNode* root, char treeName[MAX]) {
 }
 
 
-bool search(treeNameNode *tree, itemNode *root, char name[]) {
+void traverse_in_traverse(treeNameNode* root) {
+
+	if (root != NULL) {
+		traverse_in_traverse(root->left);
+		// print the name
+		std::cout << "**" << root->name << "**" << std::endl;
+		fprintf(outfile, "**%s**\n", root->name);
+
+		//print the tree
+		static char result[MAX];
+		strcpy(result, "");
+		inorder<itemNode>(root->theTree, result);
+		std::cout << result << std::endl;
+		fprintf(outfile, "%s\n", result);
+
+		traverse_in_traverse(root->right);
+	}
+}
+
+
+bool search(treeNameNode* tree, itemNode* root, char name[]) {
 	if (root == NULL) {
 		std::cout << name << " not found in " << tree->name << std::endl;
 		fprintf(outfile, "%s not found in %s\n", name, tree->name);
 		return false;
 	}
-	
+
 	else if (strcmp(root->name, name) == 0) {
 		std::cout << root->count << " " << root->name << " found in " << tree->name << std::endl;
 		fprintf(outfile, "%d %s found in %s\n", root->count, root->name, tree->name);
@@ -187,33 +199,20 @@ bool search(treeNameNode *tree, itemNode *root, char name[]) {
 }
 
 
-int countNodeNum(itemNode* root) {
-	if (root == NULL)
-		return 0;
-	else
-		return countNodeNum(root->left) + countNodeNum(root->right) + 1;
-}
+int itemBefore(itemNode* root, char name[]) {
+	int sum = 0;
 
+	if (root != NULL) {
+		sum += itemBefore(root->left, name);
 
-int itemBefore(itemNode *root, char name[]) {
-	static int sum = 0;
+		if (strcmp(name, root->name) == 0) 
+			return sum;
+		else if (strcmp(name, root->name) > 0)
+			sum++;
 
-	if (root == NULL) return 0;
-
-	else if (strcmp(root->name, name) == 0) {
-		sum += countNodeNum(root->left);
-		// now that static sum is not needed, reset it for next time function is called
-		int tempVal = sum;
-		sum = 0;
-		return tempVal;
+		sum += itemBefore(root->right, name);
 	}
-	else if (strcmp(name, root->name) < 0) {
-		itemBefore(root->left, name);
-	}
-	else if (strcmp(name, root->name) > 0) {
-		sum += (countNodeNum(root->left) + 1);
-		itemBefore(root->right, name);
-	}
+	return sum;
 }
 
 
@@ -223,7 +222,8 @@ int height(itemNode* node) {
 		return 1 + std::max(height(node->left), height(node->right));
 }
 
-void heightBal(treeNameNode *root) {
+
+void heightBal(treeNameNode* root) {
 	int lheight = height(root->theTree->left);
 	int rheight = height(root->theTree->right);
 	int dif = abs(rheight - lheight);
@@ -242,7 +242,7 @@ void heightBal(treeNameNode *root) {
 }
 
 
-int count(itemNode *root) {
+int count(itemNode* root) {
 	if (root == NULL)
 		return 0;
 	else
@@ -250,72 +250,7 @@ int count(itemNode *root) {
 }
 
 
-void traverse_in_traverse(treeNameNode* root) {
-	//~~~~~~~~~~~~ step 1: print the name tree ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	static char result[MAX];
-	inorder<treeNameNode>(root, result);
-
-	std::cout << result << std::endl;
-	fprintf(outfile,"%s\n", result);
-
-	//~~~~~~~~~~~ step 2: for each name just printed, print the title then its own tree inorder ~~~~~~~~~~~~~~~~~~~~~~~~
-	char* word[sizeof(strtok(result, " "))];
-	
-	word[0] = strtok(result, " "); // Splits spaces between words in str
-	for (int i = 1; i < sizeof(strtok(result, " ")); i++)
-	{
-		word[i] = strtok(NULL, " ,.-");
-	}
-
-	// open the file to get the number of lines you need to read
-	// used later to work through queries
-	FILE* infile = fopen("in.txt", "r");
-	if (infile == NULL)
-		std::cout << "Error opening file" << std::endl;
-	int treeNameCount, itemCount, queryCount;
-	fscanf(infile, "%d %d %d", &treeNameCount, &itemCount, &queryCount);
-
-	// loop through each node recently printed
-	// print inorder of each tree attached to the treeNameNode
-	for (int i = 0; i < treeNameCount; i++) {
-		std::cout << "**" << word[i] << "**" << std::endl;
-		fprintf(outfile, "**%s**\n", word[i]);
-
-		static char arr[MAX];
-		inorder<itemNode>(searchNameNode(root, word[i])->theTree, arr);
-		std::cout << arr << std::endl;
-		fprintf(outfile, "%s\n", arr);
-		strcpy(arr, "");
-	}
-
-	fclose(infile);
-	
-}
-
-
-int main() {
-	
-	outfile = fopen("out.txt", "w");
-
-	treeNameNode *root = buildNameTree();
-	
-	traverse_in_traverse(root);
-
-	FILE* infile = fopen("in.txt", "r");
-	if (infile == NULL)
-		std::cout << "Error opening file" << std::endl;
-
-	int treeNameCount, itemCount, queryCount;
-	fscanf(infile, "%d %d %d", &treeNameCount, &itemCount, &queryCount);
-
-	// read through the file until we are at the start of the queries
-	// dont need to save the data we are reading through
-	for (int i = 0; i <= (treeNameCount + itemCount); i++) {
-		char bin[MAX];
-		fgets(bin, sizeof(bin), infile);
-	}
-
-	// ~~~~~~~~~~ work through all the queries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void handleQueries(FILE* infile, treeNameNode* root, int queryCount) {
 	for (int i = 0; i < queryCount; i++) {
 		char command[MAX], treeName[MAX], param[MAX];
 		fscanf(infile, "%s %s", &command, &treeName);
@@ -348,6 +283,30 @@ int main() {
 			fprintf(outfile, "%s count %d\n", treeName, sum);
 		}
 	}
+}
+
+
+int main() {
+	
+	outfile = fopen("out.txt", "w");
+	FILE* infile = fopen("in.txt", "r");
+	if (infile == NULL)
+		std::cout << "Error opening file" << std::endl;
+
+	int treeNameCount, itemCount, queryCount;
+	fscanf(infile, "%d %d %d", &treeNameCount, &itemCount, &queryCount);
+
+	treeNameNode *root = buildNameTree(infile, treeNameCount, itemCount);
+
+	static char nameTree[MAX];
+	inorder<treeNameNode>(root, nameTree);
+	std::cout << nameTree << std::endl;
+	fprintf(outfile, "%s\n", nameTree);
+
+	traverse_in_traverse(root);
+
+	handleQueries(infile, root, queryCount);
+	
 
 	fclose(infile);
 	fclose(outfile);
