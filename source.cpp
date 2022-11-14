@@ -1,6 +1,6 @@
 #include<iostream>
 #include<stdlib.h>
-#include<string>
+#include<cstring>
 #define MAX 50
 FILE* outfile;
 
@@ -71,7 +71,11 @@ void heightBal(treeNameNode *root);
 int count(itemNode *root);
 
 
-
+/*
+Description: inserts a treeNameNode into a BST
+Parameters: the current root of the BST, the name of the node to add
+Return Value: returns the root of the BST
+*/
 treeNameNode* insertTreeNameNode(treeNameNode *root, char name[MAX]) {
 	
 	if (root == NULL) {
@@ -89,7 +93,11 @@ treeNameNode* insertTreeNameNode(treeNameNode *root, char name[MAX]) {
 	return root;
 }
 
-
+/*
+Description: inserts an itemNode into a BST
+Parameters: the root of the BST, the name of the node to insert, the population value for the new itemNode
+Return Value: returns root of BST
+*/
 itemNode* insertItemNode(itemNode* root, char name[MAX], int pop) {
 
 	if (root == NULL) {
@@ -106,7 +114,11 @@ itemNode* insertItemNode(itemNode* root, char name[MAX], int pop) {
 	return root;
 }
 
-
+/*
+Description: builds a BST of treeName nodes, with each treeNameNode containing its own BST of itemNodes
+Parameters: the file to read data from, the number of treeNameNodes to add, the total number of itemNodes to add
+Return Value: the root of the treeNameNode BST
+*/
 treeNameNode* buildNameTree(FILE* infile, int treeNameCount, int itemCount) {
 	
 	// set the first entry as root node
@@ -130,7 +142,11 @@ treeNameNode* buildNameTree(FILE* infile, int treeNameCount, int itemCount) {
 	return tempRoot;
 }
 
-
+/*
+Description: prints an inorder traversal of either a treeNameNode or itemNode BST
+Parameters: the root of the BST, a char[] to save the result to
+Return Value: none
+*/
 template<typename T>
 void inorder(T* root, static char result[]) {
 	if (root != NULL) {
@@ -141,7 +157,11 @@ void inorder(T* root, static char result[]) {
 	}
 }
 
-
+/*
+Description: searches a treeNameNode BST for a given node
+Parameters: the root of the treeNameNode BST, the name of the node to search for
+Return Value: returns searched node if found or NULL if the node is not found
+*/
 treeNameNode* searchNameNode(treeNameNode* root, char treeName[MAX]) {
 	if (root == NULL) {
 		return NULL;
@@ -157,7 +177,11 @@ treeNameNode* searchNameNode(treeNameNode* root, char treeName[MAX]) {
 	}
 }
 
-
+/*
+Description: traverses a treeNameNode BST inorder, printing an inorder traversal of the itemNode BST for each treeNameNode
+Parameters: the root of a treeNameNode BST
+Return Value: none
+*/
 void traverse_in_traverse(treeNameNode* root) {
 
 	if (root != NULL) {
@@ -177,7 +201,11 @@ void traverse_in_traverse(treeNameNode* root) {
 	}
 }
 
-
+/*
+Description: searches for an itemNode given the root of the BST
+Parameters: the treeNameNode of the itemNode BST to search in (needed for formatting the output), the itemNode BST to search in, the name of the itemNode to search for
+Return Value: function returns bool value of if node was found / outputs a string to a file when node is found or not found
+*/
 bool search(treeNameNode* tree, itemNode* root, char name[]) {
 	if (root == NULL) {
 		std::cout << name << " not found in " << tree->name << std::endl;
@@ -198,7 +226,11 @@ bool search(treeNameNode* tree, itemNode* root, char name[]) {
 	}
 }
 
-
+/*
+Description: finds number of nodes before a given itemNode (based on an inorder traversal)
+Parameters: the root of the itemNode BST being used, the name of the node to stop the traversal at
+Return Value: returns the number of nodes traversed before hitting the target node
+*/
 int itemBefore(itemNode* root, char name[]) {
 	int sum = 0;
 
@@ -215,14 +247,22 @@ int itemBefore(itemNode* root, char name[]) {
 	return sum;
 }
 
-
+/*
+Description: gets the height of a given itemNode
+Parameters: the itemNode to find the height of
+Return Value: returns height of node
+*/
 int height(itemNode* node) {
 	if (node == NULL) return 0;
 	else
 		return 1 + std::max(height(node->left), height(node->right));
 }
 
-
+/*
+Description: checks if a given itemNode BST is balanced
+Parameters: the treeNameNode that contains the itemNode BST being checked
+Return Value: function returns nothing / outputs to a file the left and right height as well as if the tree is balanced
+*/
 void heightBal(treeNameNode* root) {
 	int lheight = height(root->theTree->left);
 	int rheight = height(root->theTree->right);
@@ -241,7 +281,11 @@ void heightBal(treeNameNode* root) {
 	return;
 }
 
-
+/*
+Description: gets the total population count of all itemNodes in an itemNode BST 
+Parameters: the root of an itemNode BST
+Return Value: the total population count of the BST
+*/
 int count(itemNode* root) {
 	if (root == NULL)
 		return 0;
@@ -249,7 +293,11 @@ int count(itemNode* root) {
 		return count(root->left) + count(root->right) + root->count;
 }
 
-
+/*
+Description: handles all possible queries provided by the infile
+Parameters: a file to get the data from, the root of a treeNameNode BST, the number of queries to handle
+Return Value: function returns nothing / outputs strings to file based on the results of queries
+*/
 void handleQueries(FILE* infile, treeNameNode* root, int queryCount) {
 	for (int i = 0; i < queryCount; i++) {
 		char command[MAX], treeName[MAX], param[MAX];
@@ -285,7 +333,11 @@ void handleQueries(FILE* infile, treeNameNode* root, int queryCount) {
 	}
 }
 
-
+/*
+Description: main driver of the code
+Parameters: none
+Return Value: none
+*/
 int main() {
 	
 	outfile = fopen("out.txt", "w");
