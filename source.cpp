@@ -1,3 +1,11 @@
+/*
+Project2_Source.cpp
+Gregory Jans
+COP4415
+Last Modified: 11/14/22
+*/
+
+
 #include<iostream>
 #include<stdlib.h>
 #include<cstring>
@@ -58,7 +66,7 @@ public:
 treeNameNode* insertTreeNameNode(treeNameNode* root, char name[MAX]);
 itemNode* insertItemNode(itemNode* root, char name[MAX], int pop);
 template<typename T>
-void inorder(T* root, static char[]);
+void inorder(T* root);
 
 treeNameNode* searchNameNode(treeNameNode* root, char treeName[MAX]);
 void traverse_in_traverse(treeNameNode* root);
@@ -144,16 +152,16 @@ treeNameNode* buildNameTree(FILE* infile, int treeNameCount, int itemCount) {
 
 /*
 Description: prints an inorder traversal of either a treeNameNode or itemNode BST
-Parameters: the root of the BST, a char[] to save the result to
+Parameters: the root of the BST
 Return Value: none
 */
 template<typename T>
-void inorder(T* root, static char result[]) {
+void inorder(T* root) {
 	if (root != NULL) {
-		inorder(root->left, result);
-		strcat(result, root->name);
-		strcat(result, " ");
-		inorder(root->right, result);
+		inorder(root->left);
+		fprintf(outfile, "%s ", root->name);
+		std::cout << root->name << " ";
+		inorder(root->right);
 	}
 }
 
@@ -193,9 +201,9 @@ void traverse_in_traverse(treeNameNode* root) {
 		//print the tree
 		static char result[MAX];
 		strcpy(result, "");
-		inorder<itemNode>(root->theTree, result);
-		std::cout << result << std::endl;
-		fprintf(outfile, "%s\n", result);
+		inorder<itemNode>(root->theTree);
+		std::cout << std::endl;
+		fprintf(outfile, "\n");
 
 		traverse_in_traverse(root->right);
 	}
@@ -350,10 +358,9 @@ int main() {
 
 	treeNameNode *root = buildNameTree(infile, treeNameCount, itemCount);
 
-	static char nameTree[MAX];
-	inorder<treeNameNode>(root, nameTree);
-	std::cout << nameTree << std::endl;
-	fprintf(outfile, "%s\n", nameTree);
+	inorder<treeNameNode>(root);
+	std::cout << std::endl;
+	fprintf(outfile, "\n");
 
 	traverse_in_traverse(root);
 
